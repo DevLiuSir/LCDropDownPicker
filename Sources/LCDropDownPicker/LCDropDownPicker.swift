@@ -1,6 +1,3 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
-
 //
 //  LCDropDownPicker.swift
 //
@@ -16,10 +13,12 @@ public enum DropDownPickerPosition {
     case bottom
 }
 
+
 /// 自定义下拉选择器组件，支持上方或下方显示列表。
 public struct LCDropDownPicker: View {
     
     // MARK: - Public Properties
+    
     /// 当前选中的项目
     @Binding public var selectedItem: String
     
@@ -38,22 +37,37 @@ public struct LCDropDownPicker: View {
     public var cornerRadius: CGFloat = 15               // 菜单圆角半径
     public var pickerHeaderHeight: CGFloat = 50         // 选择器头部高度
     public var rowHeight: CGFloat = 40                  // 菜单项高度
-
+    
+    
+    // 在 浅色 和 深色模式下分别指定的颜色
+    public var lightModeBackgroundColor: Color = .white
+    public var darkModeBackgroundColor: Color = .black
+    public var lightModeTextColor: Color = .black
+    public var darkModeTextColor: Color = .white
+    public var isBorder = false                 // 是否需要边框
+    public var borderColor: Color = .gray       // 边框颜色
+    
+    
     // MARK: - Private Properties
-    @SceneStorage("drop_down_zindex") private var sceneZIndex = 1000.0 // 场景存储中的 Z 索引
-    @State private var isDropdownVisible = false                       // 菜单是否可见
-    @State private var currentZIndex = 1000.0                          // 当前视图 Z 索引
-
+    @SceneStorage("drop_down_zindex") private var sceneZIndex = 1000.0  // 场景存储中的 Z 索引
+    @Environment(\.colorScheme) private var colorScheme
+    @State private var isDropdownVisible = false                        // 菜单是否可见
+    @State private var currentZIndex = 1000.0                           // 当前视图 Z 索引
+    
     // MARK: - Initializer
-    /// 初始化下拉选择器
     public init(
         selectedItem: Binding<String>,
         placeholder: String,
         position: DropDownPickerPosition = .bottom,
         menuItems: [String],
         iconNames: [String]? = nil,
+        lightModeBackgroundColor: Color = .white,
+        darkModeBackgroundColor: Color = .black,
+        lightModeTextColor: Color = .black,
+        darkModeTextColor: Color = .white,
+        isBorder: Bool = false,
+        borderColor: Color = .gray,
         expandedHeight: CGFloat = 200,
-        menuBackgroundColor: Color = .white,
         listBackgroundColor: Color = .clear,
         cornerRadius: CGFloat = 15
     ) {
@@ -62,12 +76,17 @@ public struct LCDropDownPicker: View {
         self.position = position
         self.menuItems = menuItems
         self.iconNames = iconNames
+        self.lightModeBackgroundColor = lightModeBackgroundColor
+        self.darkModeBackgroundColor = darkModeBackgroundColor
+        self.isBorder = isBorder
+        self.borderColor = borderColor
+        self.lightModeTextColor = lightModeTextColor
+        self.darkModeTextColor = darkModeTextColor
         self.expandedHeight = expandedHeight
-        self.menuBackgroundColor = menuBackgroundColor
         self.listBackgroundColor = listBackgroundColor
         self.cornerRadius = cornerRadius
     }
-
+    
     // MARK: - Body
     public var body: some View {
         GeometryReader { geometry in
@@ -85,16 +104,24 @@ public struct LCDropDownPicker: View {
                 }
             }
             .clipped()
-            .background(menuBackgroundColor)
+            .background(colorScheme == .dark ? darkModeBackgroundColor : lightModeBackgroundColor)
+            // 圆角
             .cornerRadius(cornerRadius)
-            .overlay(RoundedRectangle(cornerRadius: cornerRadius)
-                        .stroke(Color.gray))
+            // 边框
+            .overlay(
+                RoundedRectangle(cornerRadius: cornerRadius)
+                    .stroke(isBorder ? borderColor : .clear)
+            )
+            
             .frame(height: expandedHeight, alignment: position == .top ? .bottom : .top)
         }
         .frame(minWidth: 0, maxWidth: .infinity, minHeight: 0, maxHeight: pickerHeaderHeight)
         .zIndex(currentZIndex)
     }
 }
+
+
+
 
 // MARK: - Private View Components
 private extension LCDropDownPicker {
@@ -104,7 +131,7 @@ private extension LCDropDownPicker {
     func PickerHeaderView() -> some View {
         HStack {
             Text(selectedItem.isEmpty ? placeholder : selectedItem)
-                .foregroundColor(selectedItem.isEmpty ? .gray : .black)
+                .foregroundColor(selectedItem.isEmpty ? .gray : colorScheme == .dark ? darkModeTextColor : lightModeTextColor)
             
             Spacer()
             
@@ -115,7 +142,7 @@ private extension LCDropDownPicker {
         }
         .frame(width: .infinity, height: pickerHeaderHeight)
         .padding(.horizontal, 15)
-        .background(menuBackgroundColor)
+        .background(colorScheme == .dark ? darkModeBackgroundColor : lightModeBackgroundColor)
         .contentShape(.rect)
         .onTapGesture {
             sceneZIndex += 1
@@ -148,7 +175,7 @@ private extension LCDropDownPicker {
     @ViewBuilder
     func optionRow(_ option: String, iconName: String) -> some View {
         HStack {
-            if !iconName.isEmpty {  // 只有在图标名不为空时显示图标
+            if !iconName.isEmpty {
                 Image(systemName: iconName)
                     .font(.body)
                     .fontWeight(.light)
@@ -160,8 +187,9 @@ private extension LCDropDownPicker {
             Spacer()
             Image(systemName: "checkmark")
                 .opacity(selectedItem == option ? 1 : 0)
+                .foregroundColor(colorScheme == .dark ? darkModeTextColor : lightModeTextColor)
         }
-        .foregroundColor(selectedItem == option ? .black : .gray)
+        .foregroundColor(selectedItem == option ? (colorScheme == .dark ? darkModeTextColor : lightModeTextColor) : .gray)
         .animation(.none, value: selectedItem)
         .frame(height: rowHeight)
         .contentShape(.rect)
@@ -177,3 +205,4 @@ private extension LCDropDownPicker {
     
     
 }
+
