@@ -14,8 +14,8 @@
     
 <img src="https://badgen.net/badge/icon/apple?icon=apple&label">
 <img src="https://img.shields.io/badge/language-swift-orange.svg">
-<img src="https://img.shields.io/badge/xcode-15+-yellow.svg">
-<img src="https://img.shields.io/badge/macOS 14+-blue.svg">
+<img src="https://img.shields.io/badge/xcode-15.3+-yellow.svg">
+<img src="https://img.shields.io/badge/macOS-14.4-blue.svg">
 <img src="https://img.shields.io/badge/build-passing-brightgreen">
 <img src="https://img.shields.io/github/languages/top/DevLiuSir/LCDropDownPicker?color=blueviolet">
 <img src="https://img.shields.io/github/license/DevLiuSir/LCDropDownPicker.svg">
@@ -38,6 +38,29 @@
 | <img align="center" src="Design/preview-1.png" width=300> |<img align="center" src="Design/preview-2.png" width=300> |
 
 
+## How to use
+
+```swift
+     LCDropDownPicker(
+                    selectedItem: $selectedOption,
+                    placeholder: "Select an option",
+                    position: .top,
+                    menuItems: items,
+                    lightModeBackgroundColor: .white,
+                    darkModeBackgroundColor: .black,
+                    lightModeTextColor: .black,
+                    darkModeTextColor: .white,
+                    isBorder: false,
+                    borderColor: .gray,
+                    expandedHeight: 300,
+                    cornerRadius: 15
+                )
+                .padding()
+                .onChange(of: selectedOption) { (oldValue, newValue) in
+                    print("Selected: \(newValue), previous old value: \(oldValue)")
+                }
+                
+```
 
 ## SwiftPackage
 
