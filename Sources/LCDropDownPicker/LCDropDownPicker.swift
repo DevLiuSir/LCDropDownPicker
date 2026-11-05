@@ -22,6 +22,9 @@ public struct LCDropDownPicker: View {
     /// 当前选中的项目
     @Binding public var selectedItem: String
     
+    // 新增：hover 状态存储
+    @State private var hoverRow: String? = nil
+    
     /// 占位符文本
     public var placeholder: String = ""
     /// 菜单显示位置, 默认在按钮的下方
@@ -30,6 +33,8 @@ public struct LCDropDownPicker: View {
     public var menuItems: [String]
     /// 图标名称数组，可选
     public var iconNames: [String]?
+    /// 菜单项及选中项的前置自定义视图
+    public var leadingContent: ((String) -> AnyView)?
     
     public var menuBackgroundColor: Color = .white      // 菜单背景颜色
     public var listBackgroundColor: Color = Color.white // 列表背景颜色
@@ -69,7 +74,8 @@ public struct LCDropDownPicker: View {
         borderColor: Color = .gray,
         expandedHeight: CGFloat = 200,
         listBackgroundColor: Color = .clear,
-        cornerRadius: CGFloat = 15
+        cornerRadius: CGFloat = 15,
+        leadingContent: ((String) -> AnyView)? = nil
     ) {
         self._selectedItem = selectedItem
         self.placeholder = placeholder
@@ -85,6 +91,7 @@ public struct LCDropDownPicker: View {
         self.expandedHeight = expandedHeight
         self.listBackgroundColor = listBackgroundColor
         self.cornerRadius = cornerRadius
+        self.leadingContent = leadingContent
     }
     
     // MARK: - Body
@@ -130,8 +137,13 @@ private extension LCDropDownPicker {
     @ViewBuilder
     func PickerHeaderView() -> some View {
         HStack {
-            Text(selectedItem.isEmpty ? placeholder : selectedItem)
-                .foregroundColor(selectedItem.isEmpty ? .gray : colorScheme == .dark ? darkModeTextColor : lightModeTextColor)
+            HStack(spacing: 8) {
+                if !selectedItem.isEmpty, let leadingContent {
+                    leadingContent(selectedItem)
+                }
+                Text(selectedItem.isEmpty ? placeholder : selectedItem)
+                    .foregroundColor(selectedItem.isEmpty ? .gray : colorScheme == .dark ? darkModeTextColor : lightModeTextColor)
+            }
             
             Spacer()
             
@@ -140,7 +152,8 @@ private extension LCDropDownPicker {
                 .foregroundColor(.gray)
                 .rotationEffect(.degrees(isDropdownVisible ? -180 : 0))
         }
-        .frame(width: .infinity, height: pickerHeaderHeight)
+        .frame(maxWidth: .infinity)
+        .frame(height: pickerHeaderHeight)
         .padding(.horizontal, 15)
         .background(colorScheme == .dark ? darkModeBackgroundColor : lightModeBackgroundColor)
         .contentShape(.rect)
@@ -182,6 +195,9 @@ private extension LCDropDownPicker {
                     .foregroundColor(.white)
                     .frame(width: 28)
             }
+            if let leadingContent {
+                leadingContent(option)
+            }
             
             Text(option)
             Spacer()
@@ -194,7 +210,11 @@ private extension LCDropDownPicker {
         .frame(height: rowHeight)
         .contentShape(.rect)
         .padding(.horizontal, 15)
-        .background(listBackgroundColor)
+        // 这里改成调用 hover 背景方法！
+        .background(rowHoverBackground(option: option))
+        .onHover { isHover in
+            hoverRow = isHover ? option : nil
+        }
         .onTapGesture {
             withAnimation(.easeInOut) {
                 selectedItem = option
@@ -202,7 +222,17 @@ private extension LCDropDownPicker {
             }
         }
     }
-    
-    
-}
 
+    // hover 背景色逻辑，浅色/深色两套hover色
+    @ViewBuilder
+    private func rowHoverBackground(option: String) -> some View {
+        let isHovered = hoverRow == option
+        if isHovered {
+            RoundedRectangle(cornerRadius: 6)
+                .fill(colorScheme == .dark ? Color.gray.opacity(0.25) : Color.gray.opacity(0.12))
+                .padding(.horizontal, 6)
+        } else {
+            listBackgroundColor
+        }
+    }
+}
